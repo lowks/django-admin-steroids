@@ -13,7 +13,7 @@ from django.utils.encoding import smart_unicode, smart_text, force_text
 from django.contrib.admin.options import IncorrectLookupParameters
 
 class NullListFilter(FieldListFilter):
-    
+
     def __init__(self, field, request, params, model, model_admin, field_path):
         self.lookup_kwarg = '%s__isnull' % field_path
         self.lookup_val = None
@@ -51,7 +51,7 @@ class NotInListFilter(FieldListFilter):
     Allows the use of exclude(field=value) via the URL.
     The inverse of Django's default "__in=" URL syntax.
     """
-    
+
     def __init__(self, field, request, params, model, model_admin, field_path):
         self.field_path = field_path
         self.lookup_kwarg = '%s__notin' % field_path
@@ -62,16 +62,16 @@ class NotInListFilter(FieldListFilter):
                 self.lookup_vals = self.lookup_vals.split(',')
         except:
             pass
-        
+
         self.lookup_choices = field.get_choices(include_blank=False)
         super(NotInListFilter, self).__init__(field,
             request, params, model, model_admin, field_path)
-        
+
         self.title = getattr(field, 'verbose_name', field_path) + ' is not'
 
     def expected_parameters(self):
         return [self.lookup_kwarg]
-    
+
     def queryset(self, request, queryset):
         try:
             # Convert the __notin to a Django ORM .exclude(...)
@@ -113,23 +113,23 @@ class CachedFieldFilter(FieldListFilter):
     Caches the choices query from the model, ignoring any other filtering
     on the model.
     """
-    
+
     cache_seconds = 3600 # 1-hour
-    
+
     def __init__(self, field, request, params, model, model_admin, field_path):
         self.field_name = field.name
         self.lookup_kwarg = '%s__exact' % field_path
         self.lookup_kwarg2 = '%s__isnull' % field_path
         self.lookup_val = request.GET.get(self.lookup_kwarg, None)
         self.lookup_val2 = request.GET.get(self.lookup_kwarg2, None)
-        
+
         super(CachedFieldFilter, self).__init__(field, request, params, model, model_admin, field_path)
-        
+
         self.model = model
-    
+
     def expected_parameters(self):
         return [self.lookup_kwarg, self.lookup_kwarg2]
-        
+
     def choices(self, cl):
         # Query cached choices.
         # Note, this purposefully gets a distinct set from the global
@@ -145,7 +145,7 @@ class CachedFieldFilter(FieldListFilter):
                 .values_list(self.field_name, flat=True)\
                 .distinct().order_by(self.field_name)
             cache.set(cache_key, values, self.cache_seconds)
-        
+
         yield {
             'selected': self.lookup_val is None and self.lookup_val2 is None,
             'query_string': cl.get_query_string({
@@ -153,7 +153,7 @@ class CachedFieldFilter(FieldListFilter):
                 }, [self.lookup_kwarg]),
             'display': _('All'),
         }
-        
+
         for value in values:
             if value is None:
                 yield {
@@ -177,44 +177,44 @@ class AjaxFieldFilter(FieldListFilter):
     Allows searching for one or more field values via ajax
     and searching for them via __exact or __in.
     """
-    
+
     template = 'admin_steroids/ajax_filter.html'
-    
+
     #TODO:specify one-only or multiple
     def __init__(self, field, request, params, model, model_admin, field_path):
         self.field_name = field.name
         self.field = field
-        
+
         self.lookup_kwarg = '%s__in' % field_path
         self.lookup_val = [_ for _ in request.GET.get(self.lookup_kwarg, '').split(',') if _.strip()]
-        
+
         super(AjaxFieldFilter, self).__init__(field, request, params, model, model_admin, field_path)
-        
+
         self.model = model
-        
+
         self.uuid = '_'+str(uuid.uuid4())
-        
+
 #        _d = request.GET.copy()
 #        del _d[self.lookup_kwarg]
 #        self.base_url = request.path + '?' + _d.urlencode
 #        if _d:
 #            self.base_url += '&'
 #        self.base_url += self.lookup_kwarg + '='
-        
+
         self.ajax_url = reverse(
             'model_field_search',
             args=(model._meta.app_label, model.__name__.lower(), self.field_name))
-    
+
 #    def __call__(self, *args, **kwargs):
 #        return
-    
+
     def expected_parameters(self):
         return [self.lookup_kwarg]
-    
+
     @property
     def values(self):
         return self.lookup_val
-    
+
     def choices(self, cl):
         # Note, all these choices are for *deselecting* the value.
         # Additions will be handled dynamically via AJAX.
@@ -231,7 +231,7 @@ class AjaxFieldFilter(FieldListFilter):
         for value in self.values:
             lst_without = list(self.lookup_val)
             lst_without.remove(value)
-            
+
             if lst_without:
                 url = cl.get_query_string(
                     new_params={self.lookup_kwarg: ','.join(lst_without)},
@@ -242,13 +242,13 @@ class AjaxFieldFilter(FieldListFilter):
                     new_params={},
                     remove=[self.lookup_kwarg],
                 )
-            
+
             # Lookup the "pretty" display value for IDs of related models.
             if isinstance(self.field, (models.ForeignKey, models.ManyToManyField, models.OneToOneField)):
                 rel_model = self.field.rel.to
                 #TODO:handle non-numeric IDs?
                 value = str(rel_model.objects.get(id=int(value)))
-            
+
             yield {
                 'selected': True,
                 'query_string': url,

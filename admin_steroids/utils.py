@@ -6,6 +6,7 @@ from django.db import models
 from django.contrib.contenttypes.models import ContentType
 from django.core.urlresolvers import reverse
 
+
 def obj_to_hash(o):
     """
     Returns the 128-character SHA-512 hash of the given object's Pickle
@@ -14,6 +15,7 @@ def obj_to_hash(o):
     import hashlib
     import cPickle as pickle
     return hashlib.sha512(pickle.dumps(o)).hexdigest()
+
 
 def get_admin_change_url(obj):
     if obj is None:
@@ -30,6 +32,7 @@ def get_admin_change_url(obj):
     except:
         raise
 
+
 def get_admin_changelist_url(obj):
     if obj is None:
         return
@@ -40,9 +43,10 @@ def get_admin_changelist_url(obj):
     except:
         raise
 
+
 class StringWithTitle(str):
     """
-    String class with a title method. Can be used to override 
+    String class with a title method. Can be used to override
     admin app names.
 
     http://ionelmc.wordpress.com/2011/06/24/custom-app-names-in-the-django-admin/
@@ -60,6 +64,7 @@ class StringWithTitle(str):
     __deepcopy__ = lambda self, memodict: self
 
 re_digits_nondigits = re.compile(r'\d+|\D+')
+
 
 def FormatWithCommas(format, value):
     """
@@ -101,7 +106,7 @@ def FormatWithCommas(format, value):
     '-1,234,567.5678'
     >>> FormatWithCommas('$%.4f', -1234567.5678)
     '$-1,234,567.5678'
-    
+
     """
     parts = re_digits_nondigits.findall(format % (value,))
     for i in xrange(len(parts)):
@@ -110,7 +115,8 @@ def FormatWithCommas(format, value):
             parts[i] = _commafy(s)
             break
     return ''.join(parts)
-    
+
+
 def _commafy(s):
     r = []
     for i, c in enumerate(reversed(s)):
@@ -119,12 +125,13 @@ def _commafy(s):
         r.insert(0, c)
     return ''.join(r)
 
+
 def currency_value(value, decimal_places=2):
     """
     Convert a given value to a standard currency value.
     """
     import decimal
- 
+
     # Build the template for quantizing the decimal places.
     q = '0.' + ('0' * (decimal_places-1)) + '1'
 
@@ -132,19 +139,23 @@ def currency_value(value, decimal_places=2):
     with decimal.localcontext() as context:
         try:
             context.rounding = decimal.ROUND_HALF_UP
-            return decimal.Decimal(value).quantize(decimal.Decimal(q), 
+            return decimal.Decimal(value).quantize(decimal.Decimal(q),
                                                    decimal.ROUND_HALF_UP)
         except:
             return None
+
 
 class classproperty(object):
     """
     Implements a @property-like decorator for class methods.
     """
+
     def __init__(self, getter):
-        self.getter= getter
+        self.getter = getter
+
     def __get__(self, instance, owner):
         return self.getter(owner)
+
 
 def absolutize_all_urls(
     text,
@@ -171,11 +182,12 @@ def absolutize_all_urls(
         text = text.replace(old_url, new_url)
     return text
 
+
 def view_link(url, obj=None, target='_blank', prefix='', template='', view_str=''):
     """
     Returns the HTML for a simple link referring to a page of items,
     usually showing a count.
-    
+
     Meant to be applied to ForeignKey fields on the given object.
     """
     class_str = 'button'
@@ -192,25 +204,27 @@ def view_link(url, obj=None, target='_blank', prefix='', template='', view_str='
         view_str = view_str or (prefix + str(obj))
     else:
         view_str = view_str or 'View'
-        
+
     if template:
         view_str = template.format(count=count)
-        
+
     return '<a href=\"{url}\" target=\"{tgt}\" class="{class_str}">{view}</a>'\
-        .format(url=url, view=view_str.replace(' ', '&nbsp;'), tgt=target, class_str=class_str)
+        .format(url=url, view=view_str.replace(' ', '&nbsp;'),
+                tgt=target, class_str=class_str)
+
 
 def view_related_link(obj, field_name, reverse_field=None, extra='', template=''):
     """
     Returns the HTML for rendering a link to a related model's
     admin changelist page.
-    
+
     Meant to be applied to ForeignKey fields on a related object where field_name
     is the related_name associated with the ForiegnKey pointing to the given object.
     """
     related = getattr(obj, field_name)
     model = related.model
     q = related.all()
-    
+
     #TODO:is there a more efficient way to do this?
     if not reverse_field:
         reverse_fields = [
@@ -221,13 +235,13 @@ def view_related_link(obj, field_name, reverse_field=None, extra='', template=''
 #        for _ in model._meta.fields:
 #            if 'foreignkey' in str(_).lower():
 #                print _.rel.related_name
-        
+
         if not reverse_fields:
             reverse_fields = [
                 _.name for _ in model._meta.fields
                 if _.rel and _.rel.to == type(obj)
             ]
-        
+
 #        print 'related model:',model
 #        print 'fields:',[_.name for _ in model._meta.fields]
 #        print 'obj:',obj
@@ -237,13 +251,14 @@ def view_related_link(obj, field_name, reverse_field=None, extra='', template=''
         reverse_field = reverse_fields[0]
 
     url = get_admin_changelist_url(model) + '?' + reverse_field + '=' + str(obj.pk)
-    
+
     if extra:
         if not extra.startswith('&'):
             extra = '&'+extra
         url = url + extra
-    
+
     return view_link(url, q.count(), template=template)
+
 
 def dereference_value(obj, name, as_name=False):
     """
@@ -262,21 +277,26 @@ def dereference_value(obj, name, as_name=False):
         return name
     return cursor
 
+
 class DictCursor(object):
     """
     A database cursor that returns records as dictionaries,
     using the field names as keys.
     """
+
     def __init__(self, database_name='default'):
         from django.db import connections
         self.cursor = connections[database_name].cursor()
         self._results = None
+
     def execute(self, *args, **kwargs):
         self.cursor.execute(*args, **kwargs)
         self.desc = self.cursor.description
+
     @property
     def field_order(self):
         return [_[0] for _ in self.desc]
+
     def __getitem__(self, i):
         lst = []
         j = 0
@@ -286,10 +306,11 @@ class DictCursor(object):
                 break
             lst.append(r)
         return lst
+
     def fetchall(self):
         return list(self)
+
     def __iter__(self):
         desc = self.cursor.description
         for row in self.cursor.fetchall():
             yield dict(zip([col[0] for col in desc], row))
-            

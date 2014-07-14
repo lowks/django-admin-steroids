@@ -9,7 +9,7 @@ import widgets as w
 import utils
 
 class BaseModelAdmin(admin.ModelAdmin):
-    
+
 #    # Cleanup the breadcrumbs on the change page.
 #    def change_view(self, request, object_id, form_url='', extra_context=None):
 #        extra_context = extra_context or {}
@@ -21,7 +21,7 @@ class BaseModelAdmin(admin.ModelAdmin):
         extra_context = extra_context or {}
         extra_context['app_label'] = self.model._meta.app_label.title()
         return super(BaseModelAdmin, self).changelist_view(request, extra_context)
-    
+
     # Cleanup the breadcrumbs on the delete page.
     def delete_view(self, request, object_id, extra_context=None):
         extra_context = extra_context or {}
@@ -34,7 +34,7 @@ class BetterRawIdFieldsModelAdmin(BaseModelAdmin):
     Displays all raw id fields in a modeladmin as a link going to that record's
     associated admin change page.
     """
-    
+
     def formfield_for_dbfield(self, db_field, **kwargs):
         if db_field.name in self.raw_id_fields:
             kwargs.pop("request", None)
@@ -69,15 +69,15 @@ ImproveRawIdFieldsFormTabularInline = BetterRawIdFieldsTabularInline
 class FormatterModelAdmin(BaseModelAdmin):
     """
     Allows the use of per-field formatters.
-    
+
     Note, inheriting this class requires that the inheritor
     use rename their readonly_fields list to base_readonly_fields.
     This is necessary in order to dynamically insert formatters
     into the readonly_fields list to satisfy the model form field validation.
     """
-    
+
     base_readonly_fields = ()
-    
+
     @utils.classproperty
     def readonly_fields(cls):
         # Inserts our formatter instances into the readonly_field list.
@@ -111,19 +111,19 @@ class FormatterModelAdmin(BaseModelAdmin):
 #        "Hook for specifying fieldsets for the add form."
 #        if self.declared_fieldsets:
 #            return self.declared_fieldsets
-#        
+#
 #        form = self.get_form(request, obj)
 #        fields = form.base_fields.keys() + list(self.get_readonly_fields(request, obj))
 #        return [(None, {'fields': fields})]
-#    
+#
 #        form = self.get_formset(request, obj).form
 #        fields = form.base_fields.keys() + list(self.get_readonly_fields(request, obj))
 #        return [(None, {'fields': fields})]
 
 class FormatterTabularInline(admin.TabularInline):
-        
+
     base_readonly_fields = ()
-    
+
     @utils.classproperty
     def readonly_fields(cls):
         # Inserts our formatter instances into the readonly_field list.
@@ -144,25 +144,25 @@ class FormatterTabularInline(admin.TabularInline):
                 if callable(name):
                     readonly_fields.append(name)
         return readonly_fields
-    
+
     def id(self, request, obj=None):
         return obj.id
-    
+
 class ReadonlyModelAdmin(BaseModelAdmin):
     """
     Disables all delete or editing functionality in an admin view.
     """
-    
+
     max_num = 0
-    
+
     readonly_fields = ()
-    
+
     def has_delete_permission(self, request, obj=None):
         return False
-    
+
     def has_add_permission(self, request, obj=None):
         return False
-    
+
     def get_actions(self, request):
         actions = super(ReadonlyModelAdmin, self).get_actions(request)
         if 'delete_selected' in actions:
@@ -172,46 +172,46 @@ class ReadonlyModelAdmin(BaseModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         readonly_fields = list(self.readonly_fields)
         return readonly_fields + [f.name for f in self.model._meta.fields]
-    
+
 class CSVModelAdminMixin(object):
     """
     Adds a CSV export action to an admin view.
     """
-    
+
     # This is the maximum number of records that will be written.
     # Be careful about increasing this.
     # Exporting massive numbers of records should be done asynchronously,
     # not in an admin request.
     csv_record_limit = 1000
-    
+
     # If true, all fields from the queryset will be added to the results.
     csv_headers_all = False
-    
+
     extra_csv_fields = ()
-    
+
     def get_actions(self, request):
         from inspect import isclass
         if hasattr(self, 'actions') and isinstance(self.actions, list):
             self.actions.append('csv_export')
         if isinstance(self, type) or (isclass(self) and issubclass(self, type)):
             return super(CSVModelAdmin, self).get_actions(request)
-    
+
     def get_extra_csv_fields(self, request):
         return self.extra_csv_fields
-    
+
     def get_csv_queryset(self, request, qs):
         return qs
-    
+
     def csv_export(self, request, qs=None):
         response = HttpResponse(mimetype='text/csv')
         response['Content-Disposition'] = 'attachment; filename=%s.csv' \
             % slugify(self.model.__name__)
-        
+
         if self.csv_headers_all:
             raw_headers = []
         else:
             raw_headers = list(self.list_display) + list(self.get_extra_csv_fields(request))
-        
+
         def get_attr(obj, name, as_name=False):
             """
             Dereferences "__" delimited variable names.
@@ -228,16 +228,16 @@ class CSVModelAdminMixin(object):
             if as_name:
                 return name
             return cursor
-        
+
         # Write header.
         header_data = {}
         fieldnames = []
-        
+
         # Write records.
         first = True
         qs = self.get_csv_queryset(request, qs)
         for r in qs[:self.csv_record_limit]:
-            
+
             if first:
                 first = False
                 if not raw_headers:
@@ -280,7 +280,7 @@ class CSVModelAdminMixin(object):
 #                            header_data[name_key] = name
                     header_data[name_key] = header_data[name_key].title()
                     fieldnames.append(name_key)
-                
+
                 writer = csv.DictWriter(response, fieldnames=fieldnames)
                 writer.writerow(header_data)
             #print 'fieldnames:',fieldnames
@@ -289,7 +289,7 @@ class CSVModelAdminMixin(object):
                 if isinstance(r, dict) and name in r:
                     data[name] = r[name]
                     continue
-                
+
                 if callable(name):
                     # This is likely a Formatter instance.
                     name_key = name.name
@@ -308,7 +308,7 @@ class CSVModelAdminMixin(object):
                     name_key = name
                     data[name_key] = get_attr(r, name)
                     #raise Exception, 'Unknown field: %s' % (name,)
-                    
+
                 if callable(data[name_key]):
                     data[name_key] = data[name_key]()
             #print 'data:',data
@@ -318,7 +318,7 @@ class CSVModelAdminMixin(object):
         'Export selected %(verbose_name_plural)s as a CSV file'
 
 class CSVModelAdmin(BaseModelAdmin, CSVModelAdminMixin):
-    
+
     def get_actions(self, request):
         #TODO:is there a better way to do this? super() ignores the mixin's get_actions()...
         CSVModelAdminMixin.get_actions(self, request)

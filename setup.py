@@ -6,6 +6,7 @@ from setuptools import setup, find_packages, Command
 
 import admin_steroids
 
+
 def get_reqs(reqs=["Django>=1.4.0"]):
     # optparse is included with Python <= 2.7, but has been deprecated in favor
     # of argparse.  We try to import argparse and if we can't, then we'll add
@@ -17,10 +18,10 @@ def get_reqs(reqs=["Django>=1.4.0"]):
     return reqs
 
 setup(
-    name = "django-admin-steroids",
-    version = admin_steroids.__version__,
-    packages = find_packages(),
-    package_data = {
+    name="django-admin-steroids",
+    version=admin_steroids.__version__,
+    packages=find_packages(),
+    package_data={
         'admin_steroids': [
             'templates/*.*',
             'templates/*/*.*',
@@ -30,13 +31,13 @@ setup(
             'static/*/*/*.*',
         ],
     },
-    author = "Chris Spencer",
-    author_email = "chrisspen@gmail.com",
-    description = "",
-    license = "LGPL",
-    url = "https://github.com/chrisspen/django-admin-steroids",
+    author="Chris Spencer",
+    author_email="chrisspen@gmail.com",
+    description="Tweaks and tools to simplify Django admin.",
+    license="LGPL",
+    url="https://github.com/chrisspen/django-admin-steroids",
     #https://pypi.python.org/pypi?%3Aaction=list_classifiers
-    classifiers = [
+    classifiers=[
         'Environment :: Web Environment',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
@@ -44,6 +45,6 @@ setup(
         'Programming Language :: Python',
         'Framework :: Django',
     ],
-    zip_safe = False,
-    install_requires = get_reqs(),
+    zip_safe=False,
+    install_requires=get_reqs(),
 )

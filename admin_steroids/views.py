@@ -18,7 +18,7 @@ class ModelFieldSearchView(TemplateView):
     Allows searching for field values in an arbitrary model for dynamically
     populating admin list filters.
     """
-    
+
     @property
     def search_path_tuple(self):
         return (
@@ -26,11 +26,11 @@ class ModelFieldSearchView(TemplateView):
             self.kwargs['model_name'],
             self.kwargs['field_name'],
         )
-    
+
     @property
     def q(self):
         return self.request.GET.get('q', '').strip()
-    
+
     @property
     def model(self):
 #        mdls = importlib.import_module('%s.models' % self.kwargs['app_name'])
@@ -39,7 +39,7 @@ class ModelFieldSearchView(TemplateView):
             app_label=self.kwargs['app_name'],
             model=self.kwargs['model_name'])
         return ct.model_class()
-    
+
 #    def get_context_data(self, **kwargs):
 #        context = super(HomePageView, self).get_context_data(**kwargs)
 #        context['latest_articles'] = Article.objects.all()[:5]
@@ -48,13 +48,13 @@ class ModelFieldSearchView(TemplateView):
     @property
     def cache_key(self):
         return self.search_path_tuple + (self.q,)
-    
+
     def render_to_response(self, context, **response_kwargs):
 
         path = self.search_path_tuple
         if path not in settings.DAS_ALLOWED_AJAX_SEARCH_PATHS:
             raise PermissionDenied
-        
+
         # Ensure only authorized users can access admin URLs.
         #TODO:extend this to allow custom authentication options
         if 'admin' in self.request.path:
@@ -115,4 +115,3 @@ class ModelFieldSearchView(TemplateView):
                 response,
                 settings.DAS_AJAX_SEARCH_DEFAULT_CACHE_SECONDS)
         return response
-    

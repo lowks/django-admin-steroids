@@ -24,13 +24,14 @@ except ImportError:
         def __str__(self):
             return self.code
 
+
 class LinkedSelect(Select):
     def render(self, name, value, attrs=None, *args, **kwargs):
         output = super(LinkedSelect, self).render(name, value, attrs=attrs, *args, **kwargs)
         model = self.choices.field.queryset.model
         to_field_name = self.choices.field.to_field_name or 'id'
         try:
-            kwargs = {to_field_name:value}
+            kwargs = {to_field_name: value}
             obj = model.objects.get(**kwargs)
             view_url = utils.get_admin_change_url(obj)
             output += mark_safe('&nbsp;<a href="%s" target="_blank">view</a>&nbsp;' % (view_url,))
@@ -38,12 +39,13 @@ class LinkedSelect(Select):
             pass
         return output
 
+
 class ForeignKeyTextInput(TextInput):
     """
     Implements the same markup as VerboseForeignKeyRawIdWidget but does not
     require an explicit model relationship.
     """
-    
+
     def __init__(self, model_class, value, *args, **kwargs):
         super(ForeignKeyTextInput, self).__init__(*args, **kwargs)
         self._model_class = model_class
@@ -58,7 +60,7 @@ class ForeignKeyTextInput(TextInput):
         self._instance = None
         if q.count():
             self._instance = q[0]
-            
+
     def render(self, name, value, attrs=None):
         if value is None:
             value = ''
@@ -85,9 +87,10 @@ class ForeignKeyTextInput(TextInput):
             changelist_url=utils.get_admin_changelist_url(self._model_class),
             instance=self._instance,
         ))
-        return  mark_safe(t.render(c))
+        return mark_safe(t.render(c))
 
 #http://djangosnippets.org/snippets/2217/
+
 
 class VerboseForeignKeyRawIdWidget(ForeignKeyRawIdWidget):
     def label_for_value(self, value):
@@ -103,6 +106,7 @@ class VerboseForeignKeyRawIdWidget(ForeignKeyRawIdWidget):
             return '&nbsp;<strong>%s</strong>' % (escape(obj),)
         except (ValueError, self.rel.to.DoesNotExist):
             return ''
+
 
 class VerboseManyToManyRawIdWidget(ManyToManyRawIdWidget):
     def label_for_value(self, value):
@@ -124,6 +128,7 @@ class VerboseManyToManyRawIdWidget(ManyToManyRawIdWidget):
                 str_values += [u'???']
         return u', '.join(str_values)
 
+
 class PlainTextWidget(forms.Widget):
     """
     Renders the value as plain text.
@@ -131,6 +136,7 @@ class PlainTextWidget(forms.Widget):
     def render(self, _name, value, attrs=None):
         value = value or ''
         return mark_safe('<div style="padding-top:3px;">'+value+'</div>')
+
 
 class PreTextWidget(forms.Widget):
     """
@@ -140,6 +146,7 @@ class PreTextWidget(forms.Widget):
         value = value or ''
         return mark_safe('<div style="padding-top:3px; white-space:pre;">'+value+'</div>')
 
+
 class NBSPTextWidget(forms.Widget):
     """
     Renders the value as plain text with all spaces replaced by "&nbsp;".
@@ -148,6 +155,7 @@ class NBSPTextWidget(forms.Widget):
         value = value or ''
         value = value.replace(' ', '&nbsp;').replace('\n', '<br/>')
         return mark_safe('<div style="padding-top:3px;">'+value+'</div>')
+
 
 class BRTextWidget(forms.Widget):
     """
@@ -161,6 +169,7 @@ class BRTextWidget(forms.Widget):
         style = _attrs.get('style', '')
         return mark_safe('<div style="'+style+'">'+value+'</div>')
 
+
 class ReadOnlyText(forms.TextInput):
     """
     Renders the value as plain text.
@@ -168,6 +177,6 @@ class ReadOnlyText(forms.TextInput):
     input_type = 'text'
 
     def render(self, name, value, attrs=None):
-        if value is None: 
+        if value is None:
             value = ''
         return value

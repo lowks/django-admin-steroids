@@ -9,7 +9,7 @@ def retry_exceptionless(tries=3, delay=3, backoff=1, exception_cb=None, commit=T
     which the delay should lengthen after each failure. backoff must be greater
     than 1, or else it isn't really a backoff. tries must be at least 0, and
     delay greater than 0.
-    
+
     Based on https://wiki.python.org/moin/PythonDecoratorLibrary#Retry
     '''
     if commit:
@@ -24,7 +24,7 @@ def retry_exceptionless(tries=3, delay=3, backoff=1, exception_cb=None, commit=T
 
     if delay <= 0:
         raise ValueError("delay is %s but must be greater than 0" % (delay,))
-    
+
     def deco_retry(f):
         def f_retry(*args, **kwargs):
             mtries, mdelay = tries, delay # make mutable

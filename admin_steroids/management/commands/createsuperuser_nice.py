@@ -23,24 +23,29 @@ class Command(BaseCommand):
         # custom user models in tests.
         super(Command, self).__init__(*args, **kwargs)
         self.UserModel = get_user_model()
-        self.username_field = self.UserModel._meta.get_field(self.UserModel.USERNAME_FIELD)
+        self.username_field = self.UserModel._meta.get_field(
+            self.UserModel.USERNAME_FIELD)
 
         self.option_list = BaseCommand.option_list + (
-            make_option('--%s' % self.UserModel.USERNAME_FIELD, dest=self.UserModel.USERNAME_FIELD, default=None,
-                help='Specifies the login for the superuser.'),
-            make_option('--noinput', action='store_false', dest='interactive', default=True,
-                help=('Tells Django to NOT prompt the user for input of any kind. '
-                    'You must use --%s with --noinput, along with an option for '
-                    'any other required field. Superusers created with --noinput will '
-                    ' not be able to log in until they\'re given a valid password.' %
-                    self.UserModel.USERNAME_FIELD)),
+            make_option('--%s' % self.UserModel.USERNAME_FIELD,
+                        dest=self.UserModel.USERNAME_FIELD, default=None,
+                        help='Specifies the login for the superuser.'),
+            make_option('--noinput', action='store_false',
+                        dest='interactive', default=True,
+                        help=('Tells Django to NOT prompt the user for input of any kind. '
+                              'You must use --%s with --noinput, along with an option for '
+                              'any other required field. Superusers created with --noinput will '
+                              ' not be able to log in until they\'re given a valid password.' %
+                              self.UserModel.USERNAME_FIELD)),
             make_option('--database', action='store', dest='database',
-                default=DEFAULT_DB_ALIAS, help='Specifies the database to use. Default is "default".'),
+                        default=DEFAULT_DB_ALIAS,
+                        help='Specifies the database to use. Default is "default".'),
             make_option('--password', action='store', dest='password',
-                default=DEFAULT_DB_ALIAS, help='Specifies the password to use. Default is no password.'),
+                        default=DEFAULT_DB_ALIAS,
+                        help='Specifies the password to use. Default is no password.'),
         ) + tuple(
             make_option('--%s' % field, dest=field, default=None,
-                help='Specifies the %s for the superuser.' % field)
+                        help='Specifies the %s for the superuser.' % field)
             for field in self.UserModel.REQUIRED_FIELDS
         )
 
@@ -62,15 +67,17 @@ class Command(BaseCommand):
             try:
                 if not username:
                     raise CommandError("You must use --%s with --noinput." %
-                            self.UserModel.USERNAME_FIELD)
+                                       self.UserModel.USERNAME_FIELD)
                 username = self.username_field.clean(username, None)
 
                 for field_name in self.UserModel.REQUIRED_FIELDS:
                     if options.get(field_name):
                         field = self.UserModel._meta.get_field(field_name)
-                        user_data[field_name] = field.clean(options[field_name], None)
+                        user_data[field_name] = field.clean(
+                            options[field_name], None)
                     else:
-                        raise CommandError("You must use --%s with --noinput." % field_name)
+                        raise CommandError(
+                            "You must use --%s with --noinput." % field_name)
             except exceptions.ValidationError as e:
                 raise CommandError('; '.join(e.messages))
 
@@ -105,16 +112,18 @@ class Command(BaseCommand):
                         pass
                     else:
                         self.stderr.write("Error: That %s is already taken." %
-                                verbose_field_name)
+                                          verbose_field_name)
                         username = None
 
                 for field_name in self.UserModel.REQUIRED_FIELDS:
                     field = self.UserModel._meta.get_field(field_name)
                     user_data[field_name] = options.get(field_name)
                     while user_data[field_name] is None:
-                        raw_value = input(force_str('%s: ' % capfirst(force_text(field.verbose_name))))
+                        raw_value = input(force_str(
+                            '%s: ' % capfirst(force_text(field.verbose_name))))
                         try:
-                            user_data[field_name] = field.clean(raw_value, None)
+                            user_data[field_name] = field.clean(raw_value,
+                                                                None)
                         except exceptions.ValidationError as e:
                             self.stderr.write("Error: %s" % '; '.join(e.messages))
                             user_data[field_name] = None
@@ -139,6 +148,7 @@ class Command(BaseCommand):
 
         user_data[self.UserModel.USERNAME_FIELD] = username
         user_data['password'] = password
-        self.UserModel._default_manager.db_manager(database).create_superuser(**user_data)
+        self.UserModel._default_manager.db_manager(database).create_superuser(
+            **user_data)
         if verbosity >= 1:
             self.stdout.write("Superuser created successfully.")
